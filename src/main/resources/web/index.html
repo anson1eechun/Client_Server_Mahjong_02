@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Mahjong Web Client</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div id="login-screen">
+        <h1>Mahjong Game</h1>
+        <input type="text" id="nickname" placeholder="Enter Nickname" value="Player1">
+        <br>
+        <button id="login-btn">Start Game</button>
+    </div>
+
+    <div id="game-screen" class="hidden">
+        <div id="game-table">
+            <div id="log-area">Wait for 4 players...</div>
+
+            <!-- Sea Area (Discards) -->
+            <div id="center-area">
+                <!-- Discarded tiles go here -->
+            </div>
+
+            <!-- Opponents -->
+            <div id="top-area" class="player-area"></div>
+            <div id="left-area" class="player-area"></div>
+            <div id="right-area" class="player-area"></div>
+
+            <!-- Me -->
+            <div id="my-area" class="player-area">
+                <!-- My tiles go here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+
+</html>

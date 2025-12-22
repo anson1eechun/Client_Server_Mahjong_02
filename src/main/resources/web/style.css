@@ -1,0 +1,217 @@
+body {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    background-color: #2c3e50;
+    color: white;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+#login-screen,
+#game-screen {
+    background: rgba(0, 0, 0, 0.5);
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.hidden {
+    display: none !important;
+}
+
+input {
+    padding: 10px;
+    border-radius: 5px;
+    border: none;
+    margin: 5px;
+}
+
+button {
+    padding: 10px 20px;
+    border-radius: 5px;
+    border: none;
+    background-color: #27ae60;
+    color: white;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:hover {
+    background-color: #2ecc71;
+}
+
+#game-table {
+    width: 900px;
+    height: 700px;
+    background-color: #006400;
+    border: 15px solid #8B4513;
+    position: relative;
+    /* Center itself */
+    margin: 0 auto;
+}
+
+/* Center Area: Sea + Wall */
+#center-area {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    /* Create more space */
+    transform: translate(-50%, -50%);
+    width: 300px;
+    /* Reduced width */
+    height: 240px;
+    /* Reduced height */
+    background: rgba(0, 0, 0, 0.15);
+    border: 2px dashed rgba(255, 255, 255, 0.2);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-content: flex-start;
+    padding: 5px;
+    overflow: hidden;
+    z-index: 10;
+    /* Ensure on top if needed, or players behind */
+}
+
+.sea-tile {
+    width: 25px;
+    height: 34px;
+    background-color: #ecf0f1;
+    color: #2c3e50;
+    margin: 2px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 2px;
+    font-size: 12px;
+    box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Player Areas */
+.player-area {
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#my-area {
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    padding-bottom: 10px;
+}
+
+#top-area {
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    padding-top: 10px;
+}
+
+#left-area {
+    left: 0;
+    top: 50%;
+    /* Push to edge */
+    transform: translateY(-50%) translateX(-30%) rotate(90deg);
+    transform-origin: center;
+}
+
+#right-area {
+    right: 0;
+    top: 50%;
+    /* Push to edge */
+    transform: translateY(-50%) translateX(30%) rotate(-90deg);
+    transform-origin: center;
+}
+
+/* My Tiles */
+.my-tile {
+    width: 45px;
+    height: 60px;
+    background-color: #ecf0f1;
+    color: #2c3e50;
+    margin: 2px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 20px;
+    cursor: pointer;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+    user-select: none;
+    transition: transform 0.1s;
+}
+
+.my-tile:hover {
+    transform: translateY(-10px);
+    background-color: #bdc3c7;
+}
+
+/* Opponent hidden tiles */
+.hidden-tile {
+    width: 30px;
+    height: 40px;
+    background-color: #2980b9;
+    /* Back of tile blue */
+    border: 1px solid #fff;
+    margin: 1px;
+    border-radius: 2px;
+}
+
+#log-area {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    width: 200px;
+    height: 100px;
+    background: rgba(0, 0, 0, 0.5);
+    color: #fff;
+    font-size: 12px;
+    overflow-y: auto;
+    z-index: 100;
+    pointer-events: none;
+    /* Let clicks pass through if needed */
+}
+
+/* Melds (Exposed) */
+.meld-area {
+    display: flex;
+    margin: 5px;
+    background: rgba(0, 0, 0, 0.1);
+    padding: 2px;
+    border-radius: 4px;
+}
+
+.exposed-tile {
+    width: 35px;
+    height: 48px;
+    background-color: #ecf0f1;
+    color: #2c3e50;
+    margin: 1px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 3px;
+    font-size: 16px;
+    box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
+    opacity: 0.9;
+    /* Slightly distinct from hand */
+}
+
+/* Specific rotation for opponents */
+#top-area .exposed-tile {
+    transform: rotate(180deg);
+}
+
+#left-area .exposed-tile {
+    transform: rotate(90deg);
+}
+
+#right-area .exposed-tile {
+    transform: rotate(-90deg);
+}
