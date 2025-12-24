@@ -5,6 +5,7 @@ import com.mahjong.logic.PlayerHand;
 import com.mahjong.logic.Tile;
 import com.mahjong.logic.HandValidator;
 import com.mahjong.logic.Meld;
+import com.mahjong.logic.TingDetector;
 import com.mahjong.model.Command;
 import com.mahjong.model.Packet;
 import org.java_websocket.WebSocket;
@@ -58,6 +59,7 @@ public class WebSocketGameSession {
     private boolean waitingForAction = false;
     private Tile pendingDiscardTile = null;
     private final HandValidator validator = new HandValidator(); // Kept for Tsumo check or remove if not needed?
+    private final TingDetector tingDetector = new TingDetector(); // 聽牌檢測器
     // END: Action Logic Fields
     
     public void processPlayerAction(WebSocket conn, Packet packet) {
@@ -264,9 +266,12 @@ public class WebSocketGameSession {
         try {
             broadcastMessage("Game", "Player " + playerIndex + " HU! Game Over.");
 
-            // Add the winning tile to hand for display
+            // Add the winning tile to hand for display (if it exists)
+            // 注意：自摸胡牌時 pendingDiscardTile 可能為 null
             PlayerHand hand = hands.get(playerIndex);
-            hand.addTile(pendingDiscardTile);
+            if (pendingDiscardTile != null) {
+                hand.addTile(pendingDiscardTile);
+            }
 
             waitingForAction = false;
             pendingDiscardTile = null;
@@ -352,6 +357,34 @@ public class WebSocketGameSession {
                 pendingDiscardTile = null;
                 currentPlayerIndex = playerIndex;
 
+                // 監測手牌狀態（檢查是否聽牌或胡牌）
+                monitorHandStatus(playerIndex);
+
+                // Check if player can win after CHOW
+                // 執行 CHOW 後，手牌已經改變，需要檢查是否可以胡牌
+                // 執行 CHOW 後：手牌 -2，Meld +1（3張），總牌數應該還是 14 張
+                // 使用 TingDetector 檢查是否為胡牌
+                int totalTiles = hand.getConnectionCount(); // 手牌 + Meld 總數
+                if (totalTiles == 14) {
+                    if (tingDetector.isWinningHand(hand)) {
+                        System.out.println("[DEBUG] Player " + playerIndex + " can HU after CHOW!");
+                        // 提示玩家可以胡牌
+                        Map<String, Object> actReq = new HashMap<>();
+                        actReq.put("action", "CHOOSE_ACTION");
+                        actReq.put("choices", Arrays.asList("HU", "SKIP"));
+                        actReq.put("tile", "");
+                        send(players.get(playerIndex), new Packet(Command.ACTION_REQUEST, actReq));
+                        broadcastMessage("Game", "Player " + playerIndex + " can HU! Choose to HU or continue playing.");
+                        // 設置等待玩家選擇
+                        waitingForAction = true;
+                        pendingResponses.clear();
+                        pendingResponses.add(playerIndex);
+                        currentActionGroup = new ActionGroup(0);
+                        currentActionGroup.addAction(playerIndex, "HU");
+                        return; // 等待玩家選擇，不繼續出牌流程
+                    }
+                }
+
                 broadcastState();
             } else {
                 System.err.println("Error: performChow missing tiles " + t1Name + ", " + t2Name);
@@ -431,7 +464,35 @@ public class WebSocketGameSession {
 
             broadcastMessage("Game", "Player " + playerIndex + " PONG!");
 
-            // 4. IMPORTANT: Pong -> No Draw -> Must Discard
+            // 4. 監測手牌狀態（檢查是否聽牌或胡牌）
+            monitorHandStatus(playerIndex);
+            
+            // 5. Check if player can win after PONG
+            // 執行 PONG 後，手牌已經改變，需要檢查是否可以胡牌
+            // 執行 PONG 後：手牌 -2，Meld +1（3張），總牌數應該還是 14 張
+            // 使用 TingDetector 檢查是否為胡牌
+            int totalTiles = hand.getConnectionCount(); // 手牌 + Meld 總數
+            if (totalTiles == 14) {
+                if (tingDetector.isWinningHand(hand)) {
+                    System.out.println("[DEBUG] Player " + playerIndex + " can HU after PONG!");
+                    // 提示玩家可以胡牌
+                    Map<String, Object> actReq = new HashMap<>();
+                    actReq.put("action", "CHOOSE_ACTION");
+                    actReq.put("choices", Arrays.asList("HU", "SKIP"));
+                    actReq.put("tile", "");
+                    send(players.get(playerIndex), new Packet(Command.ACTION_REQUEST, actReq));
+                    broadcastMessage("Game", "Player " + playerIndex + " can HU! Choose to HU or continue playing.");
+                    // 設置等待玩家選擇
+                    waitingForAction = true;
+                    pendingResponses.clear();
+                    pendingResponses.add(playerIndex);
+                    currentActionGroup = new ActionGroup(0);
+                    currentActionGroup.addAction(playerIndex, "HU");
+                    return; // 等待玩家選擇，不繼續出牌流程
+                }
+            }
+
+            // 6. IMPORTANT: Pong -> No Draw -> Must Discard
             broadcastState();
 
         } catch (Exception e) {
@@ -470,20 +531,17 @@ public class WebSocketGameSession {
         System.out.println("Turn: Player " + currentPlayerIndex + " drew " + drawn);
 
         // --- CHECK SELF-DRAW WIN (Tsumo) ---
-        // Per game_rules.md: [Check Win] immediately after draw
-        // Actually canHu checks "if I add this tile".
-        // We already added it. Validator expects hand WITHOUT the tile usually?
-        // Let's check Validator.canHu doc: "temporary add... and check".
-        // The hand ALREADY has the tile. So we should remove it before calling canHu,
-        // or update canHu to check existing hand.
-        // Validator.canHu: `hand.addTile(discard); boolean wins = ...;
-        // hand.removeTile(discard);`
-        // So it EXPECTS the tile to NOT be in hand.
-
-        // Correct usage for Tsumo:
-        finalHand.removeTile(drawn.toString()); // Temporarily remove
-        boolean canTsumo = validator.canHu(finalHand, drawn);
-        finalHand.addTile(drawn); // Put it back
+        // 使用 TingDetector 檢查自摸：手牌已經包含摸到的牌，直接檢查是否為胡牌
+        boolean canTsumo = tingDetector.isWinningHand(finalHand);
+        
+        // 監測手牌狀態（包括聽牌狀態）
+        if (!canTsumo) {
+            // 如果還沒胡牌，檢查是否聽牌
+            TingDetector.TingResult tingResult = tingDetector.detectTing(finalHand);
+            if (tingResult.isTing()) {
+                System.out.println("[MONITOR] Player " + currentPlayerIndex + " is Ting, waiting for: " + tingResult.getTingTiles());
+            }
+        }
 
         if (canTsumo) {
             System.out.println("[DEBUG] Player " + currentPlayerIndex + " can Self-Draw HU!");
@@ -510,6 +568,62 @@ public class WebSocketGameSession {
             broadcastMessage("Game", "Player " + currentPlayerIndex + " is deciding on Self-Draw...");
         }
         // If no Tsumo, user just plays a card (client waits for click)
+    }
+
+    /**
+     * 監測玩家手牌狀態（聽牌和胡牌）
+     * 在關鍵時刻調用此方法來檢查手牌狀態
+     */
+    private void monitorHandStatus(int playerIndex) {
+        PlayerHand hand = hands.get(playerIndex);
+        int totalTiles = hand.getConnectionCount();
+        
+        // 檢查是否為胡牌（14 張或 17 張）
+        if (totalTiles == 14 || totalTiles == 17) {
+            if (tingDetector.isWinningHand(hand)) {
+                System.out.println("[MONITOR] Player " + playerIndex + " has a winning hand!");
+                // 如果當前輪到該玩家，且不在等待動作狀態，則提示自摸
+                if (playerIndex == currentPlayerIndex && !waitingForAction) {
+                    System.out.println("[MONITOR] Player " + playerIndex + " can Self-Draw HU!");
+                    // 觸發自摸檢查
+                    checkSelfDrawWin(playerIndex);
+                }
+            }
+        }
+        
+        // 檢查聽牌狀態（13 張或 14 張）
+        if (totalTiles == 13 || totalTiles == 14) {
+            TingDetector.TingResult tingResult = tingDetector.detectTing(hand);
+            if (tingResult.isTing()) {
+                System.out.println("[MONITOR] Player " + playerIndex + " is Ting, waiting for: " + tingResult.getTingTiles());
+            }
+        }
+    }
+    
+    /**
+     * 檢查自摸胡牌（用於監測機制）
+     */
+    private void checkSelfDrawWin(int playerIndex) {
+        PlayerHand hand = hands.get(playerIndex);
+        if (tingDetector.isWinningHand(hand)) {
+            System.out.println("[DEBUG] Player " + playerIndex + " can Self-Draw HU!");
+            
+            // 創建 ActionGroup 提示玩家選擇
+            currentActionGroup = new ActionGroup(0); // Priority 0 (Highest)
+            currentActionGroup.addAction(playerIndex, "HU");
+            
+            waitingForAction = true;
+            pendingResponses.clear();
+            pendingResponses.add(playerIndex);
+            
+            Map<String, Object> actReq = new HashMap<>();
+            actReq.put("action", "CHOOSE_ACTION");
+            actReq.put("choices", Arrays.asList("HU", "SKIP"));
+            actReq.put("tile", "");
+            send(players.get(playerIndex), new Packet(Command.ACTION_REQUEST, actReq));
+            
+            broadcastMessage("Game", "Player " + playerIndex + " can HU! Choose to HU or continue playing.");
+        }
     }
 
     private void broadcastState() {
