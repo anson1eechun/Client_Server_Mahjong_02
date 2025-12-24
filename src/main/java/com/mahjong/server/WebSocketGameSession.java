@@ -4,6 +4,7 @@ import com.mahjong.logic.MahjongRuleEngine;
 import com.mahjong.logic.PlayerHand;
 import com.mahjong.logic.Tile;
 import com.mahjong.logic.HandValidator;
+import com.mahjong.logic.Meld;
 import com.mahjong.model.Command;
 import com.mahjong.model.Packet;
 import org.java_websocket.WebSocket;
@@ -298,7 +299,10 @@ public class WebSocketGameSession {
             // For visual simplicity we might just add the one meld object
             if (!sea.isEmpty())
                 sea.remove(sea.size() - 1); // Remove from sea
-            hand.addMeld(com.mahjong.logic.Meld.Type.KONG, tileName); // Represents the Kong
+            // 使用便利方法創建槓牌
+            Tile kongTile = Tile.valueOf(tileName);
+            Meld kongMeld = Meld.createKong(kongTile);
+            hand.addMeld(kongMeld);
 
             waitingForAction = false;
             pendingDiscardTile = null;
@@ -328,44 +332,21 @@ public class WebSocketGameSession {
                 if (!sea.isEmpty())
                     sea.remove(sea.size() - 1);
 
-                // Add Meld. We need a way to represent the combo.
-                // For now add "CHOW" type and the Discard tile (or the sequence?)
-                // Simplification: Display just the tile name? Or maybe "M1,M2,M3"?
-                // Client displays strings. Let's add the discarded tile to make 3.
-                // Ideally we send the Full Sequence.
-                // But existing logic `addMeld` takes type + 1 string.
-                // Let's stick to adding the `discard` as the key for now,
-                // but client needs to see 3 tiles.
-                // Since we don't have complex Meld structure yet, we might just "addMeld" 3
-                // times?
-                // No, `openMelds` is List<Meld>. Meld has 1 tile.
-                // If we want to show 3 tiles, we need to change Meld class or how we send it.
-                // Workaround: Send a string representation "M1,M2,M3" in the `tileName` field
-                // of Meld?
-                // If `Tile.valueOf()` fails it crashes.
-                // Let's rely on standard: Chow is centered on?
-                // Wait, we can't change Meld structure easily now without deeper refactor.
-                // Let's use the simplest approach that works visually:
-                // Add 3 "Meld" objects? Or 1 Meld object with a special name?
-                // Since Tile.valueOf needs real enum name...
-                // We can use the discard tile as the "representative".
-                // BUT Client renders "Meld.getFirstTile()"... so it only shows 1 tile.
-                // User wants to see "The Combination".
+                // 使用重構後的 Meld 類別：創建完整的吃牌（3 張牌）
+                Tile t1 = Tile.valueOf(t1Name);
+                Tile t2 = Tile.valueOf(t2Name);
+                // 組成完整的順子並排序
+                List<Tile> chowTiles = new ArrayList<>();
+                chowTiles.add(t1);
+                chowTiles.add(t2);
+                chowTiles.add(discard);
+                chowTiles.sort(Comparator.comparing(Tile::getSuit).thenComparingInt(Tile::getRank));
+                
+                // 使用便利方法創建 Meld
+                Meld chowMeld = Meld.createChow(chowTiles.get(0), chowTiles.get(1), chowTiles.get(2));
+                hand.addMeld(chowMeld);
 
-                // Quick Fix for Display:
-                // We will add 3 SEPARATE melds of type CHOW? No that looks like 3 Chows.
-                // We need to change `getMeldsStr` in PlayerHand to return the full set.
-
-                // For now, let's execute the logic correctly:
-                hand.addMeld(com.mahjong.logic.Meld.Type.CHOW, t1Name);
-                hand.addMeld(com.mahjong.logic.Meld.Type.CHOW, discard.toString());
-                hand.addMeld(com.mahjong.logic.Meld.Type.CHOW, t2Name);
-                // This will add 3 items to `openMelds`.
-                // Client `renderOpponent` iterates `allMelds` and appends div.
-                // It will show 3 tiles. CORRECT.
-                // This is a hack (3 Meld objects for 1 Chow), but visually it WORKS.
-
-                broadcastMessage("Game", "Player " + playerIndex + " CHOW (" + t1Name + "," + t2Name + ")!");
+                broadcastMessage("Game", "Player " + playerIndex + " CHOW (" + t1Name + "," + discard.toString() + "," + t2Name + ")!");
 
                 waitingForAction = false;
                 pendingDiscardTile = null;
@@ -438,7 +419,9 @@ public class WebSocketGameSession {
                 return;
             }
             sea.remove(sea.size() - 1); // Take discard from sea
-            hand.addMeld(com.mahjong.logic.Meld.Type.PONG, pendingDiscardTile.toString());
+            // 使用便利方法創建碰牌
+            Meld pongMeld = Meld.createPong(pendingDiscardTile);
+            hand.addMeld(pongMeld);
 
             waitingForAction = false;
             pendingDiscardTile = null;

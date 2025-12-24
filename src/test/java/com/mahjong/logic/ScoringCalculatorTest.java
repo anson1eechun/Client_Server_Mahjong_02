@@ -20,7 +20,7 @@ public class ScoringCalculatorTest {
     @Test
     public void testDragonPong() {
         PlayerHand hand = new PlayerHand();
-        hand.addMeld(new Meld(Meld.Type.PONG, Tile.RED)); // Red Dragon Pong
+        hand.addMeld(Meld.createPong(Tile.RED)); // Red Dragon Pong
         
         ScoringCalculator calculator = new ScoringCalculator();
         int tai = calculator.calculateTai(hand, false, Tile.EAST, Tile.EAST);
@@ -66,7 +66,7 @@ public class ScoringCalculatorTest {
         hand.addTile(Tile.M5); hand.addTile(Tile.M5); hand.addTile(Tile.M5);
         hand.addTile(Tile.M9); hand.addTile(Tile.M9);
         
-        hand.addMeld(new Meld(Meld.Type.PONG, Tile.M8));
+        hand.addMeld(Meld.createPong(Tile.M8));
         
         ScoringCalculator calculator = new ScoringCalculator();
         int tai = calculator.calculateTai(hand, false, Tile.SOUTH, Tile.WEST);

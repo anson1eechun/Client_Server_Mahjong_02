@@ -115,14 +115,29 @@ public class HandValidator {
 
     /**
      * Checks if a player can Hu (Win) on a discarded tile.
+     * Uses clone to avoid modifying the original hand.
      */
     public boolean canHu(PlayerHand hand, Tile discard) {
-        // To check if we can Hu, we temporary add the tile to hand
-        // and check normal winning condition.
-        hand.addTile(discard);
-        boolean wins = winStrategy.isWinningHand(hand);
-        hand.removeTile(discard); // Revert
-        return wins;
+        // Clone the hand to avoid modifying the original
+        PlayerHand tempHand = cloneHand(hand);
+        tempHand.addTile(discard);
+        return winStrategy.isWinningHand(tempHand);
+    }
+    
+    /**
+     * Clone a PlayerHand for safe testing without modifying the original.
+     */
+    private PlayerHand cloneHand(PlayerHand original) {
+        PlayerHand clone = new PlayerHand();
+        // Copy all standing tiles
+        for (Tile tile : original.getStandingTiles()) {
+            clone.addTile(tile);
+        }
+        // Copy all open melds
+        for (Meld meld : original.getOpenMelds()) {
+            clone.addMeld(meld);
+        }
+        return clone;
     }
 
     // Helper to check containment

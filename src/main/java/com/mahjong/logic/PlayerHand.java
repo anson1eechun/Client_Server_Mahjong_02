@@ -1,7 +1,6 @@
 package com.mahjong.logic;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -43,11 +42,11 @@ public class PlayerHand {
 
     public int getConnectionCount() {
         // Taiwan Mahjong: 16 tiles standard hand size
-        // Total count = standing + (melds * 3) + (kongs * 1?) -> complicated
-        // Simply count tiles
+        // Total count = standing + melds
         int count = standingTiles.size();
-        for (Meld m : openMelds) {
-            count += 3; // Standardize 3 for meld, strictly Kong handled elsewhere or logic adjusted
+        for (Meld meld : openMelds) {
+            // 使用 Meld 的實際牌數
+            count += meld.getTileCount();
         }
         return count;
     }
@@ -78,31 +77,35 @@ public class PlayerHand {
         return standingTiles.size();
     }
 
+    /**
+     * 添加面子（使用便利方法）
+     * @deprecated 建議使用 addMeld(Meld) 方法，此方法僅用於向後兼容
+     */
+    @Deprecated
     public void addMeld(Meld.Type type, String tileName) {
         Tile t = Tile.valueOf(tileName);
-        // Create full list for Pong (3) / Kong (4?)
-        // Assuming Pong for now if type logic not specified
-        // But wait, this method is used by 'performPong' which passes 'Type.PONG'.
-        List<Tile> set = new ArrayList<>();
-        set.add(t);
-        set.add(t);
-        set.add(t);
-        // For Kong, we might need 4?
-        if (type == Meld.Type.KONG) {
-            // This simplisic method doesn't know for sure, but standard Kong is 4.
-            // Exposed Kong usually shown as 4 tiles.
-            // set.add(t);
-            // In Taiwan MJ, is Kong 4 tiles visible? Yes.
-            // But if we only removed 3 from hand + 1 from sea, we have 4.
-            // Let's add 4th if Kong.
-            // However, existing calls might rely on simple 3 representations.
-            // Let's stick to 3 for PONG/CHOW (simplified).
-            // Actually CHOW simplified here (1 tile argument) implies 3 identical? NO.
-            // That's why this method is bad for CHOW.
-            // But performPong calls this.
+        Meld m;
+        
+        switch (type) {
+            case PONG:
+                m = Meld.createPong(t);
+                break;
+            case KONG:
+                m = Meld.createKong(t);
+                break;
+            case CHOW:
+                // CHOW 不能只用一張牌創建，這是一個設計缺陷
+                // 但為了向後兼容，我們創建一個臨時的（不正確的）Meld
+                // 調用者應該使用 addMeld(Meld) 並傳入完整的 3 張牌
+                throw new IllegalArgumentException(
+                    "Cannot create CHOW with single tile. Use addMeld(Meld) with complete chow tiles.");
+            case EYES:
+                m = Meld.createEyes(t);
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown meld type: " + type);
         }
-
-        Meld m = new Meld(type, set);
+        
         openMelds.add(m);
     }
 

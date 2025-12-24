@@ -263,13 +263,20 @@ public class ActionProcessor {
         // 從手牌移除相關牌（不包括目標牌，因為它來自別人）
         for (Tile tile : chowTiles) {
             if (!tile.equals(targetTile)) {
-                // Must remove by Tile object? PlayerHand removeTile takes String usually.
-                hand.removeTile(tile.toString());
+                hand.removeTile(tile); // 使用 Tile 物件而非 String
             }
         }
 
-        // 添加面子
-        Meld meld = new Meld(Meld.Type.CHOW, chowTiles.get(0));
+        // 組成完整的順子：chowTiles 已經包含完整的 3 張牌（從 getChowOptions 返回）
+        // 確保順序正確（排序）
+        List<Tile> completeChow = new ArrayList<>(chowTiles);
+        completeChow.sort(Comparator.comparing(Tile::getSuit).thenComparingInt(Tile::getRank));
+        
+        if (completeChow.size() != 3) {
+            throw new IllegalStateException("CHOW must have exactly 3 tiles, got " + completeChow.size());
+        }
+        
+        Meld meld = Meld.createChow(completeChow.get(0), completeChow.get(1), completeChow.get(2));
         hand.addMeld(meld);
     }
 
@@ -282,7 +289,7 @@ public class ActionProcessor {
         List<Tile> tiles = new ArrayList<>(hand.getStandingTiles());
         for (Tile tile : tiles) {
             if (tile.equals(targetTile) && removed < 2) {
-                hand.removeTile(tile.toString());
+                hand.removeTile(tile); // 使用 Tile 物件而非 String
                 removed++;
             }
         }
@@ -291,8 +298,8 @@ public class ActionProcessor {
             throw new IllegalStateException("Cannot pong: not enough tiles");
         }
 
-        // 添加面子
-        Meld meld = new Meld(Meld.Type.PONG, targetTile);
+        // 添加面子：使用便利方法創建碰牌
+        Meld meld = Meld.createPong(targetTile);
         hand.addMeld(meld);
     }
 
@@ -305,7 +312,7 @@ public class ActionProcessor {
         List<Tile> tiles = new ArrayList<>(hand.getStandingTiles());
         for (Tile tile : tiles) {
             if (tile.equals(targetTile) && removed < 3) {
-                hand.removeTile(tile.toString());
+                hand.removeTile(tile); // 使用 Tile 物件而非 String
                 removed++;
             }
         }
@@ -314,8 +321,8 @@ public class ActionProcessor {
             throw new IllegalStateException("Cannot kong: not enough tiles");
         }
 
-        // 添加面子
-        Meld meld = new Meld(Meld.Type.KONG, targetTile);
+        // 添加面子：使用便利方法創建槓牌
+        Meld meld = Meld.createKong(targetTile);
         hand.addMeld(meld);
     }
     /*

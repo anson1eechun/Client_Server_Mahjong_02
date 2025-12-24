@@ -47,9 +47,11 @@ public class ScoringCalculator {
     private boolean hasPongOrKong(PlayerHand hand, Tile target) {
         // Check open melds
         for (Meld meld : hand.getOpenMelds()) {
-            if (meld.getFirstTile() == target && 
-               (meld.getType() == Meld.Type.PONG || meld.getType() == Meld.Type.KONG)) {
-                return true;
+            if ((meld.getType() == Meld.Type.PONG || meld.getType() == Meld.Type.KONG)) {
+                // 檢查 Meld 中是否包含目標牌
+                if (meld.getTiles().contains(target)) {
+                    return true;
+                }
             }
         }
         // Check standing tiles (hidden pongs/kongs are hard to detect without full decomposition)
@@ -73,10 +75,12 @@ public class ScoringCalculator {
         
         // Check melds
         for (Meld m : hand.getOpenMelds()) {
-            Tile t = m.getFirstTile();
-            if (t.getSuit() == Tile.Suit.DRAGON || t.getSuit() == Tile.Suit.WIND) return false;
-            if (firstSuit == null) firstSuit = t.getSuit();
-            else if (firstSuit != t.getSuit()) return false;
+            // 對於清一色檢查，我們檢查 Meld 中所有牌的花色
+            for (Tile t : m.getTiles()) {
+                if (t.getSuit() == Tile.Suit.DRAGON || t.getSuit() == Tile.Suit.WIND) return false;
+                if (firstSuit == null) firstSuit = t.getSuit();
+                else if (firstSuit != t.getSuit()) return false;
+            }
         }
         
         return true;
@@ -86,9 +90,10 @@ public class ScoringCalculator {
         Tile.Suit suit = null;
         boolean hasHonors = false;
 
-        List<Tile> allTiles = hand.getStandingTiles();
+        java.util.List<Tile> allTiles = new java.util.ArrayList<>(hand.getStandingTiles());
         for (Meld m : hand.getOpenMelds()) {
-            allTiles.add(m.getFirstTile()); // Representative
+            // 添加 Meld 中的所有牌（對於半清一色檢查，我們需要所有牌）
+            allTiles.addAll(m.getTiles());
         }
 
         for (Tile t : allTiles) {
