@@ -59,6 +59,7 @@ killall java
 # 啟動 WebSocket 伺服器
 mvn exec:java -Dexec.mainClass="com.mahjong.server.MahjongWebSocketServer"
 ```
+file:///Users/lijunsheng/Documents/%E8%BB%9F%E9%AB%94%E6%B8%AC%E8%A9%A6/Client_Server_Mahjong_backup_20251225_031556/target/classes/web/index.html
 
 **成功標誌**：
 ```

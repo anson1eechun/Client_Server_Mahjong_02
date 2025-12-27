@@ -20,6 +20,7 @@ public class Meld {
 
     private final Type type;
     private final List<Tile> tiles;
+    private final boolean concealed; // ✅ P1-1: 是否暗的（用於暗槓）
 
     /**
      * 主要建構子：使用完整的牌列表
@@ -27,11 +28,22 @@ public class Meld {
      * @param tiles 牌的列表（必須符合類型要求：CHOW=3張, PONG=3張, KONG=4張）
      */
     public Meld(Type type, List<Tile> tiles) {
+        this(type, tiles, false); // 預設為明的
+    }
+
+    /**
+     * 完整建構子：使用完整的牌列表和是否暗的標記
+     * @param type 面子類型
+     * @param tiles 牌的列表（必須符合類型要求：CHOW=3張, PONG=3張, KONG=4張）
+     * @param concealed 是否暗的（用於暗槓）
+     */
+    public Meld(Type type, List<Tile> tiles, boolean concealed) {
         if (tiles == null || tiles.isEmpty()) {
             throw new IllegalArgumentException("Tiles list cannot be null or empty");
         }
         this.type = type;
         this.tiles = new ArrayList<>(tiles);
+        this.concealed = concealed;
         
         // 驗證牌數是否符合類型
         validateTileCount();
@@ -76,12 +88,21 @@ public class Meld {
     }
 
     /**
-     * 便利方法：創建槓牌（Kong）
+     * 便利方法：創建槓牌（Kong - 明槓）
      * @param tile 要槓的牌（會自動複製 4 次）
      * @return 新的 Meld 物件
      */
     public static Meld createKong(Tile tile) {
-        return new Meld(Type.KONG, Arrays.asList(tile, tile, tile, tile));
+        return new Meld(Type.KONG, Arrays.asList(tile, tile, tile, tile), false);
+    }
+
+    /**
+     * ✅ P1-1: 便利方法：創建暗槓（Concealed Kong）
+     * @param tile 要暗槓的牌（會自動複製 4 次）
+     * @return 新的 Meld 物件（concealed = true）
+     */
+    public static Meld createConcealedKong(Tile tile) {
+        return new Meld(Type.KONG, Arrays.asList(tile, tile, tile, tile), true);
     }
 
     /**
@@ -129,6 +150,13 @@ public class Meld {
      */
     public int getTileCount() {
         return tiles.size();
+    }
+
+    /**
+     * ✅ P1-1: 獲取是否為暗的（用於暗槓）
+     */
+    public boolean isConcealed() {
+        return concealed;
     }
 
     @Override

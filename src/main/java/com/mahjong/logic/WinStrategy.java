@@ -22,18 +22,33 @@ public class WinStrategy {
      * @return true if winning
      */
     public boolean isWinningHand(PlayerHand hand) {
+        // ✅ 修復：考慮已經組成的 meld（碰/吃/槓）
+        // 標準麻將胡牌：4 個面子（每個 3 張） + 1 對眼（2 張） = 14 張
+        // 如果玩家已經有 K 個 meld，那麼 standing tiles 需要組成 (4-K) 個面子 + 1 對眼
+        
         List<Tile> tiles = hand.getStandingTiles();
-        int tileCount = tiles.size();
-
-        // Taiwan Mahjong: 17 tiles for dealer at start, 14 for winning hand check
-        // Allow both 14 and 17 for flexibility
-        if (tileCount != 14 && tileCount != 17) {
+        List<Meld> melds = hand.getOpenMelds();
+        
+        // 計算 meld 佔用的牌數
+        int meldTileCount = 0;
+        for (Meld meld : melds) {
+            meldTileCount += meld.getTileCount(); // 碰/吃=3, 槓=4
+        }
+        
+        // 總牌數 = standing tiles + meld tiles，應該是 14 或 17（莊家）
+        int totalTileCount = tiles.size() + meldTileCount;
+        if (totalTileCount != 14 && totalTileCount != 17) {
             return false;
         }
-
-        // Basic check: (Count - 2) % 3 should be 0 for standard form
-        // Standard: 4 sets (3 tiles each) + 1 pair (2 tiles) = 14 tiles
-        if ((tileCount - 2) % 3 != 0) {
+        
+        // standing tiles 的數量
+        int standingTileCount = tiles.size();
+        
+        // standing tiles 需要組成 (4 - meldSetsCount) 個面子 + 1 對眼
+        // 所以 standing tiles 的數量應該是：(4 - meldSetsCount) * 3 + 2 = 14 - meldSetsCount * 3
+        // 這等價於：(standingTileCount - 2) % 3 == 0 且 standingTileCount == 14 - meldTileCount
+        // 基本檢查：standing tiles 數量應該滿足 (Count - 2) % 3 == 0
+        if ((standingTileCount - 2) % 3 != 0) {
             return false;
         }
 
@@ -50,7 +65,7 @@ public class WinStrategy {
                 counts[i] -= 2;
 
                 // Check if remaining tiles form valid sets
-                int setsNeeded = (tileCount - 2) / 3;
+                int setsNeeded = (standingTileCount - 2) / 3;
                 if (canFormSets(counts, setsNeeded)) {
                     counts[i] += 2; // Restore before returning
                     return true;

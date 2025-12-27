@@ -325,10 +325,53 @@ public class ActionProcessor {
         Meld meld = Meld.createKong(targetTile);
         hand.addMeld(meld);
     }
-    /*
-     * ... Concealed Kong methods omitted for brevity, but let's include if user
-     * provided ...
+
+    /**
+     * ✅ P1-1: 檢測玩家是否可以暗槓（手上是否有 4 張相同牌）
+     * @param hand 玩家手牌
+     * @return 可以暗槓的牌列表
      */
-    /* User provided executeConcealedKong/getConcealedKong/getAddKong */
-    /* ... */
+    public List<Tile> getConcealedKongOptions(PlayerHand hand) {
+        List<Tile> options = new ArrayList<>();
+        Map<Tile, Integer> counts = new HashMap<>();
+        
+        // 計算每種牌的數量
+        for (Tile tile : hand.getStandingTiles()) {
+            counts.put(tile, counts.getOrDefault(tile, 0) + 1);
+        }
+        
+        // 找出數量為 4 的牌
+        for (Map.Entry<Tile, Integer> entry : counts.entrySet()) {
+            if (entry.getValue() == 4) {
+                options.add(entry.getKey());
+            }
+        }
+        
+        return options;
+    }
+
+    /**
+     * ✅ P1-1: 執行暗槓動作
+     * @param hand 玩家手牌
+     * @param tile 要暗槓的牌
+     */
+    public void executeConcealedKong(PlayerHand hand, Tile tile) {
+        // 移除 4 張牌
+        int removed = 0;
+        List<Tile> tiles = new ArrayList<>(hand.getStandingTiles());
+        for (Tile t : tiles) {
+            if (t.equals(tile) && removed < 4) {
+                hand.removeTile(t);
+                removed++;
+            }
+        }
+        
+        if (removed != 4) {
+            throw new IllegalStateException("Cannot concealed kong: not enough tiles");
+        }
+        
+        // 添加暗槓面子
+        Meld kong = Meld.createConcealedKong(tile);
+        hand.addMeld(kong);
+    }
 }
