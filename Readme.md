@@ -5,9 +5,10 @@
 本專案是一個基於 **WebSocket** 的多人線上台灣麻將遊戲，採用 **Java** 後端 + **Web** 前端架構。
 
 ### 核心目標
-- ✅ **軟體測試能力展示**：67+ 單元測試，Branch Coverage 目標 90%+
-- ✅ **高程式碼品質**：WMC > 200，通過 PMD 檢查
+- ✅ **軟體測試能力展示**：311 個單元測試，整體 Branch Coverage 80%（核心邏輯 85%）
+- ✅ **高程式碼品質**：總複雜度 584（WMC > 200），通過 PMD 檢查
 - ✅ **完整遊戲邏輯**：支援吃、碰、槓、胡等完整麻將規則
+- ✅ **Bug 修復紀錄**：10 個 Bug & Fix 案例，涵蓋 Critical、Major、Logic 等各類問題
 
 ### 技術棧
 - **後端**：Java 17, Maven, WebSocket (Java-WebSocket)
@@ -32,15 +33,37 @@ git clone https://github.com/anson1eechun/Client_Server_Mahjong_02.git
 cd Client_Server_Mahjong_02
 ```
 
-2. **編譯專案**
+2. **設定環境（Windows PowerShell，首次使用）**
+```powershell
+# 臨時允許執行腳本
+Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process
+
+# 執行環境設定腳本（如果需要）
+.\setup_env.ps1
+```
+
+3. **編譯專案**
 ```bash
 mvn clean compile
 ```
 
-3. **執行測試（可選）**
+4. **執行測試（可選）**
 ```bash
 mvn test
 ```
+
+### 快速啟動
+
+**Windows PowerShell（推薦）**：
+```powershell
+# 設定執行政策（僅需執行一次）
+Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process
+
+# 啟動伺服器
+.\start.ps1
+```
+
+**詳細說明**：請參考 `QUICK_START.md` 或 `Demo展示指南.md`
 
 ---
 
@@ -50,8 +73,32 @@ mvn test
 
 #### 步驟 1：啟動伺服器
 
-開啟**第一個終端機**，執行：
+**Windows PowerShell（推薦）**：
+```powershell
+# 設定執行政策（僅需執行一次）
+Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process
 
+# 使用啟動腳本
+.\start.ps1
+```
+
+**或手動執行**：
+```powershell
+# 配置環境變數
+$javaDir = "$env:USERPROFILE\DevelopmentTools\jdk-17"
+$mavenDir = Get-ChildItem "$env:USERPROFILE\DevelopmentTools" -Directory | Where-Object { $_.Name -like "*maven*" } | Select-Object -First 1
+$env:JAVA_HOME = $javaDir
+$env:MAVEN_HOME = $mavenDir.FullName
+$env:PATH = "$javaDir\bin;$($mavenDir.FullName)\bin;$env:PATH"
+
+# 停止舊進程
+Get-Process -Name "java" -ErrorAction SilentlyContinue | Stop-Process -Force
+
+# 啟動 WebSocket 伺服器
+mvn exec:java -Dexec.mainClass="com.mahjong.server.MahjongWebSocketServer"
+```
+
+**Unix/Linux/Mac**：
 ```bash
 # 清理舊程序（確保端口乾淨）
 killall java
@@ -59,7 +106,6 @@ killall java
 # 啟動 WebSocket 伺服器
 mvn exec:java -Dexec.mainClass="com.mahjong.server.MahjongWebSocketServer"
 ```
-file:///Users/lijunsheng/Documents/%E8%BB%9F%E9%AB%94%E6%B8%AC%E8%A9%A6/Client_Server_Mahjong_backup_20251225_031556/target/classes/web/index.html
 
 **成功標誌**：
 ```
@@ -68,45 +114,43 @@ Mahjong WebSocket Server started on port: 8888
 
 **⚠️ 注意**：保持此終端機視窗開啟，不要關閉！
 
+**詳細說明**：請參考 `QUICK_START.md` 或 `Demo展示指南.md`
+
 ---
 
 #### 步驟 2：開啟 4 個瀏覽器視窗（模擬 4 位玩家）
 
-**方法 A：使用瀏覽器開啟**
-1. 開啟 Finder，前往：`src/main/resources/web/`
+**Windows PowerShell（推薦）**：
+```powershell
+# 開啟 4 個瀏覽器視窗
+Start-Process "src\main\resources\web\index.html"
+Start-Sleep -Seconds 1
+Start-Process "src\main\resources\web\index.html"
+Start-Sleep -Seconds 1
+Start-Process "src\main\resources\web\index.html"
+Start-Sleep -Seconds 1
+Start-Process "src\main\resources\web\index.html"
+```
+
+**或使用 Demo 啟動腳本**：
+```powershell
+.\start_demo.ps1
+```
+
+**方法 B：手動開啟**
+1. 開啟檔案總管，前往：`src\main\resources\web\`
 2. 雙擊 `index.html` 開啟第一個玩家視窗
 3. 重複步驟 2，總共開啟 **4 個瀏覽器視窗**（或使用不同瀏覽器）
 
-**方法 B：使用終端機開啟（推薦）**
+**Unix/Linux/Mac**：
 ```bash
 # 開啟 4 個瀏覽器視窗
 open src/main/resources/web/index.html
 open src/main/resources/web/index.html
 open src/main/resources/web/index.html
 open src/main/resources/web/index.html
-```
 
-**方法 C：使用快速腳本（最方便）**
-```bash
-# 創建並執行快速啟動腳本
-cat > start_demo.sh << 'EOF'
-#!/bin/bash
-echo "正在啟動伺服器..."
-killall java 2>/dev/null
-mvn exec:java -Dexec.mainClass="com.mahjong.server.MahjongWebSocketServer" &
-sleep 3
-echo "正在開啟 4 個瀏覽器視窗..."
-open src/main/resources/web/index.html
-sleep 1
-open src/main/resources/web/index.html
-sleep 1
-open src/main/resources/web/index.html
-sleep 1
-open src/main/resources/web/index.html
-echo "✅ Demo 準備完成！請在瀏覽器中輸入暱稱並點擊 Start Game"
-EOF
-
-chmod +x start_demo.sh
+# 或使用 Demo 啟動腳本
 ./start_demo.sh
 ```
 
@@ -143,7 +187,7 @@ chmod +x start_demo.sh
 1. **發牌階段**
    - 展示每位玩家收到手牌
    - 展示手牌自動排序
-   - 說明：每位玩家 13 張牌（台灣麻將規則）
+   - 說明：莊家 17 張牌，閒家 16 張牌（台灣麻將規則）
 
 2. **摸牌與出牌**
    - 當前玩家（東家）摸牌
@@ -230,22 +274,25 @@ mvn jacoco:report
 **展示內容**：
 1. **測試統計**：
    ```
-   Tests run: 67, Failures: 0, Errors: 0
+   Tests run: 311, Failures: 0, Errors: 0
    ```
 
 2. **開啟覆蓋率報告**：
    ```bash
-   open target/site/jacoco/index.html
+   # Windows PowerShell:
+   Start-Process "target\site\jacoco\index.html"
+   # Unix/Linux/Mac:
+   # open target/site/jacoco/index.html
    ```
 
 3. **展示覆蓋率**：
-   - Branch Coverage
-   - Line Coverage
+   - 整體 Branch Coverage: 80%（核心邏輯 85%）
+   - 整體 Line Coverage: 84%（核心邏輯 92%）
    - 各類別覆蓋率詳情
 
 **演示重點**：
-- ✅ 展示測試完整性（67+ 測試）
-- ✅ 展示覆蓋率分析
+- ✅ 展示測試完整性（311 個測試，超標 522%）
+- ✅ 展示覆蓋率分析（核心邏輯達到高覆蓋率）
 - ✅ 展示程式碼品質
 
 ---
@@ -273,10 +320,11 @@ mvn jacoco:report
 - ✅ **自動判定**：系統自動檢測可執行動作
 
 ### 技術亮點
-- ✅ **高測試覆蓋率**：67+ 單元測試，目標 90% Branch Coverage
-- ✅ **程式碼品質**：WMC > 200，通過 PMD 檢查
+- ✅ **高測試覆蓋率**：311 個單元測試，整體 Branch Coverage 80%（核心邏輯 85%）
+- ✅ **程式碼品質**：總複雜度 584（WMC > 200），通過 PMD 檢查
 - ✅ **重構完成**：Meld 類別重構，移除技術債務
 - ✅ **整合測試**：完整的遊戲流程測試
+- ✅ **Bug 修復**：10 個 Bug & Fix 案例，涵蓋多種測試方法
 
 ---
 
@@ -297,7 +345,10 @@ mvn test -Dtest=GameFlowIntegrationTest
 mvn clean test jacoco:report
 
 # 查看覆蓋率報告
-open target/site/jacoco/index.html
+# Windows PowerShell:
+Start-Process "target\site\jacoco\index.html"
+# Unix/Linux/Mac:
+# open target/site/jacoco/index.html
 ```
 
 ### 測試統計
@@ -305,48 +356,102 @@ open target/site/jacoco/index.html
 | 測試類別 | 測試數量 | 狀態 |
 |---------|---------|------|
 | WinStrategyTest | 8 | ✅ |
+| WinStrategyBranchTest | 23 | ✅ |
 | HandValidatorTest | 2 | ✅ |
 | ScoringCalculatorTest | 4 | ✅ |
+| ScoringCalculatorBranchTest | 27 | ✅ |
 | MahjongRuleEngineTest | 2 | ✅ |
 | ActionProcessorTest | 9 | ✅ |
+| ActionProcessorBranchTest | 13 | ✅ |
 | PlayerHandTest | 16 | ✅ |
+| PlayerHandBranchTest | 13 | ✅ |
 | MeldTest | 19 | ✅ |
+| MeldBranchTest | 11 | ✅ |
+| TingDetectorTest | 9 | ✅ |
 | GameFlowIntegrationTest | 6 | ✅ |
-| ClientHandlerTest | 1 | ✅ |
-| **總計** | **67** | ✅ |
+| MahjongClientTest | 14 | ✅ |
+| ActionGroupTest | 6 | ✅ |
+| MahjongWebSocketServerTest | 17 | ✅ |
+| WebSocketGameSessionTest | 20 | ✅ |
+| WebSocketGameSessionAdvancedTest | 21 | ✅ |
+| WebSocketGameSessionCoverageTest | 59 | ✅ |
+| WebSocketGameSessionExceptionTest | 12 | ✅ |
+| **總計** | **311** | ✅ |
 
 ---
 
 ## 📁 專案結構
 
 ```
-Client_Server_Mahjong/
+Client_Server_Mahjong_02/
 ├── src/
 │   ├── main/
 │   │   ├── java/com/mahjong/
-│   │   │   ├── client/          # 客戶端（已棄用，改用 Web）
-│   │   │   ├── logic/           # 遊戲邏輯核心
-│   │   │   │   ├── WinStrategy.java      # 胡牌判定
-│   │   │   │   ├── ActionProcessor.java  # 動作處理
-│   │   │   │   ├── HandValidator.java    # 手牌驗證
-│   │   │   │   ├── PlayerHand.java        # 玩家手牌
-│   │   │   │   ├── Meld.java              # 面子（吃碰槓）
-│   │   │   │   └── ...
-│   │   │   ├── server/          # 伺服器端
+│   │   │   ├── client/                    # 客戶端（舊版 Socket，已棄用）
+│   │   │   │   └── MahjongClient.java
+│   │   │   ├── logic/                     # 遊戲邏輯核心（9 個類別）
+│   │   │   │   ├── WinStrategy.java       # 胡牌判定演算法
+│   │   │   │   ├── ActionProcessor.java   # 動作處理與優先級仲裁
+│   │   │   │   ├── HandValidator.java     # 手牌驗證
+│   │   │   │   ├── PlayerHand.java        # 玩家手牌管理
+│   │   │   │   ├── Meld.java              # 面子（吃碰槓）類別
+│   │   │   │   ├── MahjongRuleEngine.java # 規則引擎（發牌、摸牌）
+│   │   │   │   ├── ScoringCalculator.java # 台數計算
+│   │   │   │   ├── TingDetector.java      # 聽牌檢測
+│   │   │   │   └── Tile.java                 # 牌類別（Enum）
+│   │   │   ├── server/                    # 伺服器端（3 個類別）
 │   │   │   │   ├── MahjongWebSocketServer.java  # WebSocket 伺服器
-│   │   │   │   └── WebSocketGameSession.java    # 遊戲會話
-│   │   │   └── model/           # 資料模型
+│   │   │   │   ├── WebSocketGameSession.java    # 遊戲會話管理
+│   │   │   │   └── ActionGroup.java              # 動作群組
+│   │   │   └── model/                     # 資料模型
+│   │   │       ├── Command.java           # 命令列舉
+│   │   │       └── Packet.java            # 封包類別
 │   │   └── resources/
-│   │       └── web/             # Web 前端
-│   │           ├── index.html   # 主頁面
-│   │           ├── game.js      # 遊戲邏輯
-│   │           └── style.css    # 樣式表
+│   │       ├── logback.xml                 # 日誌配置
+│   │       └── web/                        # Web 前端
+│   │           ├── index.html              # 主頁面
+│   │           ├── game.js                  # 遊戲邏輯（前端）
+│   │           └── style.css               # 樣式表
 │   └── test/
 │       └── java/com/mahjong/
-│           └── logic/           # 單元測試
-│           └── server/          # 伺服器測試
-├── pom.xml                      # Maven 配置
-└── Readme.md                    # 本文件
+│           ├── client/                     # 客戶端測試
+│           │   └── MahjongClientTest.java
+│           ├── logic/                       # 邏輯層測試（14 個測試類別）
+│           │   ├── WinStrategyTest.java
+│           │   ├── WinStrategyBranchTest.java
+│           │   ├── ActionProcessorTest.java
+│           │   ├── ActionProcessorBranchTest.java
+│           │   ├── HandValidatorTest.java
+│           │   ├── PlayerHandTest.java
+│           │   ├── PlayerHandBranchTest.java
+│           │   ├── MeldTest.java
+│           │   ├── MeldBranchTest.java
+│           │   ├── MahjongRuleEngineTest.java
+│           │   ├── ScoringCalculatorTest.java
+│           │   ├── ScoringCalculatorBranchTest.java
+│           │   ├── TingDetectorTest.java
+│           │   └── GameFlowIntegrationTest.java
+│           └── server/                      # 伺服器層測試（6 個測試類別）
+│               ├── MahjongWebSocketServerTest.java
+│               ├── WebSocketGameSessionTest.java
+│               ├── WebSocketGameSessionAdvancedTest.java
+│               ├── WebSocketGameSessionCoverageTest.java
+│               ├── WebSocketGameSessionExceptionTest.java
+│               └── ActionGroupTest.java
+├── pom.xml                                  # Maven 配置
+├── Readme.md                                # 本文件
+├── Demo展示指南.md                          # Demo 展示完整指南
+├── Project issues and solutions.md          # 專案問題與解決方案
+├── QUICK_START.md                           # 快速啟動指南
+├── game_rules.md                            # 麻將規則說明
+├── PQ.md                                    # 專案需求
+├── start.ps1                                # PowerShell 啟動腳本（Windows）
+├── start.bat                                # Batch 啟動腳本（Windows）
+├── start_demo.ps1                           # Demo 演示啟動腳本
+├── start_demo.sh                            # Demo 演示啟動腳本（Unix）
+├── setup_env.ps1                            # 環境設定腳本
+└── logs/                                    # 日誌目錄
+    └── mahjong.log
 ```
 
 ---
@@ -360,7 +465,17 @@ Client_Server_Mahjong/
 Address already in use: bind
 ```
 
-**解決方法**：
+**解決方法（Windows PowerShell）**：
+```powershell
+# 停止所有 Java 進程
+Get-Process -Name "java" -ErrorAction SilentlyContinue | Stop-Process -Force
+
+# 等待 2 秒後重新啟動
+Start-Sleep -Seconds 2
+.\start.ps1
+```
+
+**解決方法（Unix/Linux/Mac）**：
 ```bash
 killall java
 # 然後重新啟動伺服器
@@ -382,9 +497,18 @@ killall java
 ### 問題 4：測試失敗
 
 **解決方法**：
-```bash
-# 清理並重新編譯
+```powershell
+# Windows PowerShell
 mvn clean compile test
+
+# 或使用啟動腳本重新編譯
+.\start.ps1
+```
+
+**如果仍有問題**：
+```powershell
+# 檢查具體失敗的測試
+mvn test -Dtest=失敗的測試類別名稱
 ```
 
 ---
@@ -393,24 +517,52 @@ mvn clean compile test
 
 ### 已達成目標
 
-- ✅ **測試數量**：67 tests（目標：50+）
-- ✅ **WMC**：~230（目標：>200）
-- ✅ **Critical Bugs**：4/4 已修復
+- ✅ **測試數量**：311 tests（目標：50+，超標 522%）
+- ✅ **總複雜度**：584（目標：>200，超標 192%）
+- ✅ **整體 Branch Coverage**：80%（核心邏輯 com.mahjong.logic 達到 85%）
+- ✅ **整體 Line Coverage**：84%（核心邏輯 com.mahjong.logic 達到 92%）
+- ✅ **Bug & Fix 案例**：10 個（涵蓋 Critical、Major、Logic 等各類問題）
 - ✅ **程式碼品質**：通過編譯，無重大錯誤
+
+### 各套件覆蓋率詳情
+
+| 套件 | Branch Coverage | Line Coverage | Instruction Coverage |
+|------|----------------|---------------|---------------------|
+| com.mahjong.logic | **85%** ✅ | **92%** ✅ | **92%** ✅ |
+| com.mahjong.server | 73% | 82% | 77% |
+| com.mahjong.model | n/a | 95% ✅ | 93% ✅ |
+| com.mahjong.client | 16% | 31% | 30% |
+| **整體** | **80%** | **84%** | **84%** |
 
 ### 待達成目標
 
-- ⚠️ **Branch Coverage**：需查看 Jacoco 報告（目標：90%+）
-- ⚠️ **PMD 檢查**：需執行 PMD 驗證
+- ⚠️ **整體 Branch Coverage**：80%（目標：90%+，核心邏輯已達 85%）
+- ⚠️ **com.mahjong.client 覆蓋率**：16%（可選，主要為舊版 Socket 客戶端）
 
 ---
 
 ## 📚 相關文件
 
-- `Project_Requirements.md` - 專案需求規格
-- `Project issues and solutions.md` - 問題分析與解決方案
-- `game_rules.md` - 麻將規則說明
+### 核心文件
+- `Readme.md` - 本文件，專案概述與使用說明
+- `Demo展示指南.md` - Demo 展示完整指南（**推薦閱讀**）
+- `Project issues and solutions.md` - 專案問題分析與解決方案
+- `QUICK_START.md` - 快速啟動指南（Windows PowerShell 環境設定）
+
+### 開發文件
 - `agent.md` - AI Agent 開發指南
+- `PQ.md` - 專案需求規格
+- `game_rules.md` - 麻將規則說明
+
+### 報告文件
+- `書面報告檢視與修正建議.md` - 書面報告檢視與修正建議
+
+### 啟動腳本
+- `start.ps1` - PowerShell 啟動腳本（Windows，推薦）
+- `start.bat` - Batch 啟動腳本（Windows）
+- `start_demo.ps1` - Demo 演示啟動腳本（Windows）
+- `start_demo.sh` - Demo 演示啟動腳本（Unix/Linux/Mac）
+- `setup_env.ps1` - 環境設定腳本
 
 ---
 
