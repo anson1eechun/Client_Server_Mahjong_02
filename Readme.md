@@ -441,7 +441,6 @@ Client_Server_Mahjong_02/
 ├── pom.xml                                  # Maven 配置
 ├── Readme.md                                # 本文件
 ├── Demo展示指南.md                          # Demo 展示完整指南
-├── Project issues and solutions.md          # 專案問題與解決方案
 ├── QUICK_START.md                           # 快速啟動指南
 ├── game_rules.md                            # 麻將規則說明
 ├── PQ.md                                    # 專案需求
