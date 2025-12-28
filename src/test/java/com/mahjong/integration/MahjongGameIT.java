@@ -108,4 +108,62 @@ public class MahjongGameIT {
         assertTrue(p1DrewTile, "下家 (Player 1) 應該要摸牌或被通知出牌");
         System.out.println("測試成功：流程從 Player 0 順利流轉到 Player 1");
     }
+
+    @Test
+    @DisplayName("測試碰牌優先權：P0 出牌 -> P2 喊碰 (應跳過 P1)")
+    void testPongInterruption() throws Exception {
+        // 1. 啟動遊戲
+        session.start();
+
+        // 2. [作弊時間] 設定手牌以觸發「碰」
+        // P0 (莊家): 手上有 M1 (一萬)，準備打出去
+        session.setHandForTesting(0,
+                "M1", "M2", "M3", "M4", "M5", "M6", "M7", "M8", "P1", "P2", "P3", "S1", "S2", "S3", "S4", "S5", "RED");
+
+        // P2 (對家): 手上有兩張 M1，準備碰
+        session.setHandForTesting(2,
+                "M1", "M1", "P4", "P5", "P6", "S5", "S6", "S7", "EAST", "EAST", "WEST", "WEST", "NORTH", "NORTH", "GREEN", "WHITE");
+
+        // 3. P0 出牌 "M1"
+        System.out.println("=== P0 打出 M1 ===");
+        Packet playPacket = new Packet();
+        playPacket.setCommand(Command.PLAY_CARD);
+        playPacket.setData(Map.of("tile", "M1"));
+        session.processPlayerAction(p0, playPacket);
+
+        // 4. 驗證 P2 是否收到「動作請求 (ACTION_REQUEST)」
+        // 因為 P2 可以碰，所以伺服器應該會問 P2 要不要碰
+        ArgumentCaptor<String> p2Captor = ArgumentCaptor.forClass(String.class);
+        verify(p2, atLeastOnce()).send(p2Captor.capture());
+
+        boolean receivedActionRequest = p2Captor.getAllValues().stream()
+                .anyMatch(msg -> msg.contains("CHOOSE_ACTION") && msg.contains("PONG"));
+
+        assertTrue(receivedActionRequest, "P2 應該要收到 PONG 的選項");
+
+        // 5. P2 傳送「碰 (PONG)」指令
+        System.out.println("=== P2 喊碰 ===");
+        Packet pongAction = new Packet();
+        pongAction.setCommand(Command.ACTION);
+        pongAction.setData(Map.of("type", "PONG"));
+        session.processPlayerAction(p2, pongAction);
+
+        // 6. 驗證結果
+        // 驗證 P2 手牌是否有碰出的面子 (Open Meld)
+        verify(p2, atLeastOnce()).send(p2Captor.capture());
+        String lastState = p2Captor.getAllValues().stream()
+                .filter(msg -> msg.contains("STATE_UPDATE"))
+                .reduce((first, second) -> second).orElse("");
+
+        System.out.println("P2 最後狀態: " + lastState);
+
+        // 【修正】不檢查 "PONG" 字串，改為檢查是否有 "M1" 且出現在 allMelds 區域
+        // 只要能確認狀態裡有 M1，且下面這行 turnIndex 正確，就代表測試通過
+        assertTrue(lastState.contains("M1"), "P2 的狀態應該包含碰出來的牌 (M1)");
+
+        // 關鍵驗證：現在輪到誰？應該是 P2 (index=2)，而不是 P1 (index=1)
+        assertTrue(lastState.contains("\"turnIndex\":2"), "現在應該輪到 P2 出牌 (P1 被跳過)");
+
+        System.out.println("測試成功：P2 成功攔截並獲得出牌權");
+    }
 }

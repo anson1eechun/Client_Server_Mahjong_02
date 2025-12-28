@@ -12,6 +12,12 @@ public class PlayerHand {
     private final List<Tile> standingTiles; // Hand tiles (hidden)
     private final List<Meld> openMelds; // Exposed melds (Chow/Pong/Kong)
 
+    // [新增] 用於測試：清空手牌
+    public void clear() {
+        standingTiles.clear();
+        openMelds.clear();
+    }
+
     public PlayerHand() {
         this.standingTiles = new ArrayList<>();
         this.openMelds = new ArrayList<>();

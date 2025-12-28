@@ -26,6 +26,17 @@ public class WebSocketGameSession {
     private int currentPlayerIndex = 0; // 0=East, 1=South, 2=West, 3=North
     private final ObjectMapper mapper = new ObjectMapper();
 
+    // [新增] 用於整合測試：強制設定某玩家的手牌
+    public void setHandForTesting(int playerIndex, String... tileNames) {
+        PlayerHand hand = hands.get(playerIndex);
+        hand.clear(); // 先清空
+        for (String name : tileNames) {
+            hand.addTile(Tile.valueOf(name));
+        }
+        // 重新排序
+        hand.sort();
+    }
+
     public WebSocketGameSession(List<WebSocket> players, Map<WebSocket, String> nickNames) {
         this.players = players;
         this.nickNames = nickNames;
