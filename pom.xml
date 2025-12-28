@@ -15,6 +15,7 @@
     <javafx.version>21</javafx.version>
     <junit.version>5.10.0</junit.version>
     <jacoco.version>0.8.11</jacoco.version>
+    <pmd.version>3.21.0</pmd.version>
   </properties>
 
   <dependencies>
@@ -131,6 +132,34 @@
                 </rule>
               </rules>
             </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- PMD Code Review -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-pmd-plugin</artifactId>
+        <version>${pmd.version}</version>
+        <configuration>
+          <rulesets>
+            <ruleset>/category/java/bestpractices.xml</ruleset>
+            <ruleset>/category/java/codestyle.xml</ruleset>
+            <ruleset>/category/java/design.xml</ruleset>
+            <ruleset>/category/java/errorprone.xml</ruleset>
+            <ruleset>/category/java/performance.xml</ruleset>
+          </rulesets>
+          <targetJdk>17</targetJdk>
+          <excludeRoots>
+            <excludeRoot>target/generated-sources</excludeRoot>
+          </excludeRoots>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>verify</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
           </execution>
         </executions>
       </plugin>
