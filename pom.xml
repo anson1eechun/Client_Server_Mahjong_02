@@ -15,7 +15,7 @@
     <javafx.version>21</javafx.version>
     <junit.version>5.10.0</junit.version>
     <jacoco.version>0.8.11</jacoco.version>
-    <pmd.version>3.21.0</pmd.version>
+    <pmd.version>3.23.0</pmd.version>
   </properties>
 
   <dependencies>
@@ -101,7 +101,7 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <version>3.2.5</version>
         <configuration>
-          <argLine>-Dfile.encoding=UTF-8</argLine>
+          <argLine>@{argLine} -Dfile.encoding=UTF-8</argLine>
         </configuration>
       </plugin>
 
@@ -160,7 +160,7 @@
             <ruleset>/category/java/errorprone.xml</ruleset>
             <ruleset>/category/java/performance.xml</ruleset>
           </rulesets>
-          <targetJdk>21</targetJdk>
+          <!-- targetJdk removed - PMD will auto-detect from maven.compiler.source -->
           <excludeRoots>
             <excludeRoot>target/generated-sources</excludeRoot>
           </excludeRoots>

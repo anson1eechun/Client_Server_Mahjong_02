@@ -376,6 +376,13 @@ public class WebSocketGameSession {
     private synchronized void performKong(int playerIndex) {
         try {
             // Exposed Kong (Ming Gang)
+            // ✅ 修復：檢查 pendingDiscardTile 是否為 null
+            if (pendingDiscardTile == null) {
+                System.err.println("[ERROR] PerformKong failed: pendingDiscardTile is null");
+                waitingForAction = false;
+                return;
+            }
+            
             PlayerHand hand = hands.get(playerIndex);
             String tileName = pendingDiscardTile.toString();
 
@@ -459,6 +466,15 @@ public class WebSocketGameSession {
         try {
             logger.debug("performChow called for Player {}, currentPlayerIndex before = {}", playerIndex, currentPlayerIndex);
             PlayerHand hand = hands.get(playerIndex);
+            
+            // ✅ 修復：檢查 pendingDiscardTile 是否為 null
+            if (pendingDiscardTile == null) {
+                System.err.println("[ERROR] PerformChow failed: pendingDiscardTile is null");
+                waitingForAction = false;
+                nextTurn();
+                return;
+            }
+            
             Tile discard = pendingDiscardTile;
 
             // Remove the 2 specific tiles from hand
@@ -570,6 +586,13 @@ public class WebSocketGameSession {
     private synchronized void performPong(int playerIndex) {
         try {
             PlayerHand hand = hands.get(playerIndex);
+
+            // ✅ 修復：檢查 pendingDiscardTile 是否為 null
+            if (pendingDiscardTile == null) {
+                System.err.println("[ERROR] PerformPong failed: pendingDiscardTile is null");
+                waitingForAction = false;
+                return;
+            }
 
             // 1. Remove 2 tiles from hand
             boolean r1 = hand.removeTile(pendingDiscardTile.toString());
