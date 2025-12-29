@@ -5,8 +5,8 @@
 本專案是一個基於 **WebSocket** 的多人線上台灣麻將遊戲，採用 **Java** 後端 + **Web** 前端架構。
 
 ### 核心目標
-- ✅ **軟體測試能力展示**：311 個單元測試，整體 Branch Coverage 80%（核心邏輯 85%）
-- ✅ **高程式碼品質**：總複雜度 584（WMC > 200），通過 PMD 檢查
+- ✅ **軟體測試能力展示**：488 個單元測試，整體 Branch Coverage 90%（核心邏輯 91%）
+- ✅ **高程式碼品質**：總複雜度 482（WMC > 200），通過 PMD 檢查
 - ✅ **完整遊戲邏輯**：支援吃、碰、槓、胡等完整麻將規則
 - ✅ **Bug 修復紀錄**：10 個 Bug & Fix 案例，涵蓋 Critical、Major、Logic 等各類問題
 
@@ -274,7 +274,7 @@ mvn jacoco:report
 **展示內容**：
 1. **測試統計**：
    ```
-   Tests run: 311, Failures: 0, Errors: 0
+   Tests run: 488, Failures: 0, Errors: 0
    ```
 
 2. **開啟覆蓋率報告**：
@@ -286,13 +286,13 @@ mvn jacoco:report
    ```
 
 3. **展示覆蓋率**：
-   - 整體 Branch Coverage: 80%（核心邏輯 85%）
-   - 整體 Line Coverage: 84%（核心邏輯 92%）
+   - 整體 Branch Coverage: 90%（核心邏輯 91%）
+   - 整體 Line Coverage: 90%（核心邏輯 95%）
    - 各類別覆蓋率詳情
 
 **演示重點**：
-- ✅ 展示測試完整性（311 個測試，超標 522%）
-- ✅ 展示覆蓋率分析（核心邏輯達到高覆蓋率）
+- ✅ 展示測試完整性（488 個測試，超標 876%）
+- ✅ 展示覆蓋率分析（整體達到 90% 分支覆蓋率）
 - ✅ 展示程式碼品質
 
 ---
@@ -320,8 +320,8 @@ mvn jacoco:report
 - ✅ **自動判定**：系統自動檢測可執行動作
 
 ### 技術亮點
-- ✅ **高測試覆蓋率**：311 個單元測試，整體 Branch Coverage 80%（核心邏輯 85%）
-- ✅ **程式碼品質**：總複雜度 584（WMC > 200），通過 PMD 檢查
+- ✅ **高測試覆蓋率**：488 個單元測試，整體 Branch Coverage 90%（核心邏輯 91%）
+- ✅ **程式碼品質**：總複雜度 482（WMC > 200），通過 PMD 檢查
 - ✅ **重構完成**：Meld 類別重構，移除技術債務
 - ✅ **整合測試**：完整的遊戲流程測試
 - ✅ **Bug 修復**：10 個 Bug & Fix 案例，涵蓋多種測試方法
@@ -357,26 +357,38 @@ Start-Process "target\site\jacoco\index.html"
 |---------|---------|------|
 | WinStrategyTest | 8 | ✅ |
 | WinStrategyBranchTest | 23 | ✅ |
+| WinStrategyAdditionalBranchTest | 30 | ✅ |
 | HandValidatorTest | 2 | ✅ |
+| HandValidatorBranchTest | 15 | ✅ |
 | ScoringCalculatorTest | 4 | ✅ |
 | ScoringCalculatorBranchTest | 27 | ✅ |
 | MahjongRuleEngineTest | 2 | ✅ |
+| MahjongRuleEngineBranchTest | 8 | ✅ |
 | ActionProcessorTest | 9 | ✅ |
 | ActionProcessorBranchTest | 13 | ✅ |
+| ActionProcessorAdditionalBranchTest | 12 | ✅ |
 | PlayerHandTest | 16 | ✅ |
 | PlayerHandBranchTest | 13 | ✅ |
+| PlayerHandAdditionalBranchTest | 9 | ✅ |
 | MeldTest | 19 | ✅ |
 | MeldBranchTest | 11 | ✅ |
 | TingDetectorTest | 9 | ✅ |
+| TingDetectorBranchTest | 8 | ✅ |
 | GameFlowIntegrationTest | 6 | ✅ |
 | MahjongClientTest | 14 | ✅ |
+| MahjongClientBranchTest | 12 | ✅ |
 | ActionGroupTest | 6 | ✅ |
 | MahjongWebSocketServerTest | 17 | ✅ |
+| MahjongWebSocketServerBranchTest | 8 | ✅ |
 | WebSocketGameSessionTest | 20 | ✅ |
 | WebSocketGameSessionAdvancedTest | 21 | ✅ |
 | WebSocketGameSessionCoverageTest | 59 | ✅ |
 | WebSocketGameSessionExceptionTest | 12 | ✅ |
-| **總計** | **311** | ✅ |
+| WebSocketGameSessionAdditionalBranchTest | 18 | ✅ |
+| WebSocketGameSessionFinalBranchTest | 15 | ✅ |
+| WebSocketGameSessionRemainingBranchTest | 22 | ✅ |
+| WebSocketGameSessionFinalCoverageTest | 25 | ✅ |
+| **總計** | **488** | ✅ |
 
 ---
 
@@ -414,29 +426,41 @@ Client_Server_Mahjong_02/
 │   │           └── style.css               # 樣式表
 │   └── test/
 │       └── java/com/mahjong/
-│           ├── client/                     # 客戶端測試
-│           │   └── MahjongClientTest.java
-│           ├── logic/                       # 邏輯層測試（14 個測試類別）
+│           ├── client/                     # 客戶端測試（2 個測試類別）
+│           │   ├── MahjongClientTest.java
+│           │   └── MahjongClientBranchTest.java
+│           ├── logic/                       # 邏輯層測試（20 個測試類別）
 │           │   ├── WinStrategyTest.java
 │           │   ├── WinStrategyBranchTest.java
+│           │   ├── WinStrategyAdditionalBranchTest.java
 │           │   ├── ActionProcessorTest.java
 │           │   ├── ActionProcessorBranchTest.java
+│           │   ├── ActionProcessorAdditionalBranchTest.java
 │           │   ├── HandValidatorTest.java
+│           │   ├── HandValidatorBranchTest.java
 │           │   ├── PlayerHandTest.java
 │           │   ├── PlayerHandBranchTest.java
+│           │   ├── PlayerHandAdditionalBranchTest.java
 │           │   ├── MeldTest.java
 │           │   ├── MeldBranchTest.java
 │           │   ├── MahjongRuleEngineTest.java
+│           │   ├── MahjongRuleEngineBranchTest.java
 │           │   ├── ScoringCalculatorTest.java
 │           │   ├── ScoringCalculatorBranchTest.java
 │           │   ├── TingDetectorTest.java
+│           │   ├── TingDetectorBranchTest.java
 │           │   └── GameFlowIntegrationTest.java
-│           └── server/                      # 伺服器層測試（6 個測試類別）
+│           └── server/                      # 伺服器層測試（11 個測試類別）
 │               ├── MahjongWebSocketServerTest.java
+│               ├── MahjongWebSocketServerBranchTest.java
 │               ├── WebSocketGameSessionTest.java
 │               ├── WebSocketGameSessionAdvancedTest.java
 │               ├── WebSocketGameSessionCoverageTest.java
 │               ├── WebSocketGameSessionExceptionTest.java
+│               ├── WebSocketGameSessionAdditionalBranchTest.java
+│               ├── WebSocketGameSessionFinalBranchTest.java
+│               ├── WebSocketGameSessionRemainingBranchTest.java
+│               ├── WebSocketGameSessionFinalCoverageTest.java
 │               └── ActionGroupTest.java
 ├── pom.xml                                  # Maven 配置
 ├── Readme.md                                # 本文件
@@ -516,10 +540,10 @@ mvn test -Dtest=失敗的測試類別名稱
 
 ### 已達成目標
 
-- ✅ **測試數量**：311 tests（目標：50+，超標 522%）
-- ✅ **總複雜度**：584（目標：>200，超標 192%）
-- ✅ **整體 Branch Coverage**：80%（核心邏輯 com.mahjong.logic 達到 85%）
-- ✅ **整體 Line Coverage**：84%（核心邏輯 com.mahjong.logic 達到 92%）
+- ✅ **測試數量**：488 tests（目標：50+，超標 876%）
+- ✅ **總複雜度**：482（目標：>200，超標 141%）
+- ✅ **整體 Branch Coverage**：90%（核心邏輯 com.mahjong.logic 達到 91%）
+- ✅ **整體 Line Coverage**：90%（核心邏輯 com.mahjong.logic 達到 95%）
 - ✅ **Bug & Fix 案例**：10 個（涵蓋 Critical、Major、Logic 等各類問題）
 - ✅ **程式碼品質**：通過編譯，無重大錯誤
 
@@ -527,16 +551,16 @@ mvn test -Dtest=失敗的測試類別名稱
 
 | 套件 | Branch Coverage | Line Coverage | Instruction Coverage |
 |------|----------------|---------------|---------------------|
-| com.mahjong.logic | **85%** ✅ | **92%** ✅ | **92%** ✅ |
-| com.mahjong.server | 73% | 82% | 77% |
-| com.mahjong.model | n/a | 95% ✅ | 93% ✅ |
-| com.mahjong.client | 16% | 31% | 30% |
-| **整體** | **80%** | **84%** | **84%** |
+| com.mahjong.logic | **91%** ✅ | **95%** ✅ | **95%** ✅ |
+| com.mahjong.server | **88%** ✅ | **84%** ✅ | **84%** ✅ |
+| com.mahjong.model | n/a | **93%** ✅ | **93%** ✅ |
+| com.mahjong.client | **83%** ✅ | **96%** ✅ | **96%** ✅ |
+| **整體** | **90%** ✅ | **90%** ✅ | **90%** ✅ |
 
 ### 待達成目標
 
-- ⚠️ **整體 Branch Coverage**：80%（目標：90%+，核心邏輯已達 85%）
-- ⚠️ **com.mahjong.client 覆蓋率**：16%（可選，主要為舊版 Socket 客戶端）
+- ✅ **整體 Branch Coverage**：90%（目標：90%+，已達成！）
+- ⚠️ **com.mahjong.client 覆蓋率**：83%（已大幅提升，主要為舊版 Socket 客戶端）
 
 ---
 
