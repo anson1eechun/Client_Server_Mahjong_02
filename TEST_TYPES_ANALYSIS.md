@@ -2,8 +2,8 @@
 
 ## 📊 測試統計
 
-- **總測試文件數**: 34 個
-- **總測試方法數**: 498+ 個
+- **總測試文件數**: 39 個（新增 5 個）
+- **總測試方法數**: 580+ 個（新增 82+ 個）
 - **測試框架**: JUnit 5 (Jupiter)
 - **Mock 框架**: Mockito 5.14.2
 - **覆蓋率工具**: JaCoCo 0.8.12
@@ -87,7 +87,9 @@
 **文件命名**: `*IntegrationTest.java`
 
 **範例**:
-- `GameFlowIntegrationTest.java` - 完整遊戲流程整合測試
+- `GameFlowIntegrationTest.java` - 完整遊戲流程整合測試（邏輯層）
+- `WebSocketServerIntegrationTest.java` - WebSocket 伺服器與遊戲會話整合測試
+- `ClientServerIntegrationTest.java` - 客戶端與伺服器整合測試
 
 **測試內容**:
 - ✅ 完整遊戲流程：發牌→摸牌→出牌→吃碰槓→胡牌
@@ -95,9 +97,12 @@
 - ✅ 動作優先級測試（胡 > 碰 > 吃）
 - ✅ 從牌牆摸牌流程
 - ✅ 發牌流程驗證
+- ✅ WebSocket 伺服器與遊戲會話整合
+- ✅ 客戶端與伺服器訊息流整合
+- ✅ 多客戶端連接和狀態同步
 
 **測試方法**:
-- 不使用 Mock，使用真實物件
+- 使用 Mock WebSocket 模擬客戶端
 - 測試完整業務流程
 - 驗證多個組件之間的互動
 
@@ -174,11 +179,59 @@
 
 ### 灰箱/黑箱測試 (Gray/Black Box Testing)
 - ✅ **整合測試**: 測試完整遊戲流程
+- ✅ **黑箱測試**: 從外部視角測試 API 和遊戲流程
+- ✅ **系統測試**: 測試多客戶端併發和狀態同步
 
 **特徵**:
 - 不依賴內部實作細節
 - 測試系統整體行為
-- 使用真實物件而非 Mock
+- 使用 Mock WebSocket 模擬客戶端
+- 只通過 WebSocket API 測試
+
+**新增測試類型**:
+
+#### 7. **黑箱測試 (Black Box Tests)** - 黑箱測試
+**特徵**: 從外部視角測試，不依賴內部實作
+
+**文件命名**: `*BlackBoxTest.java`
+
+**範例**:
+- `WebSocketAPIBlackBoxTest.java` - WebSocket API 黑箱測試
+- `GameFlowBlackBoxTest.java` - 遊戲流程黑箱測試
+
+**測試內容**:
+- ✅ 測試所有 Command 的輸入輸出
+- ✅ 測試錯誤處理（無效輸入、格式錯誤等）
+- ✅ 測試完整遊戲流程（從玩家視角）
+- ✅ 測試動作優先級和非法動作處理
+- ✅ 測試時序錯誤處理
+
+**測試方法**:
+- 只通過 WebSocket API 測試
+- 不直接訪問內部狀態
+- 驗證系統行為是否符合預期
+
+#### 8. **系統測試 (System Tests)** - 系統測試
+**特徵**: 測試整個系統的併發和穩定性
+
+**文件命名**: `*SystemTest.java`
+
+**範例**:
+- `MultiClientSystemTest.java` - 多客戶端系統測試
+
+**測試內容**:
+- ✅ 測試多個客戶端同時連接
+- ✅ 測試併發登入處理
+- ✅ 測試併發動作處理
+- ✅ 測試狀態同步機制
+- ✅ 測試系統在併發情況下的穩定性
+- ✅ 測試廣播訊息機制
+- ✅ 測試併發壓力下的系統表現
+
+**測試方法**:
+- 使用 ExecutorService 模擬併發
+- 測試系統在壓力下的穩定性
+- 驗證狀態同步機制
 
 ---
 
@@ -201,8 +254,18 @@ src/test/java/com/mahjong/
     ├── *BranchTest.java                    # 分支覆蓋率測試
     ├── *CoverageTest.java                  # 覆蓋率測試
     ├── *ExceptionTest.java                 # 異常處理測試
-    └── *AdvancedTest.java                  # 進階測試
+    ├── *AdvancedTest.java                  # 進階測試
+    ├── *BlackBoxTest.java                  # 黑箱測試（新增）
+    ├── *IntegrationTest.java              # 整合測試（新增）
+    └── *SystemTest.java                    # 系統測試（新增）
 ```
+
+**新增測試文件詳情**:
+- `WebSocketAPIBlackBoxTest.java` - WebSocket API 黑箱測試（30+ 測試方法）
+- `GameFlowBlackBoxTest.java` - 遊戲流程黑箱測試（12+ 測試方法）
+- `WebSocketServerIntegrationTest.java` - WebSocket 伺服器整合測試（15+ 測試方法）
+- `ClientServerIntegrationTest.java` - 客戶端-伺服器整合測試（15+ 測試方法）
+- `MultiClientSystemTest.java` - 多客戶端系統測試（10+ 測試方法）
 
 ---
 
@@ -221,20 +284,44 @@ src/test/java/com/mahjong/
 ## ✅ 測試品質指標
 
 - ✅ **覆蓋率**: 分支覆蓋率 90%+ (server 包)
-- ✅ **測試數量**: 498+ 個測試方法
-- ✅ **測試類型**: 涵蓋單元、整合、異常、分支覆蓋
+- ✅ **測試數量**: 580+ 個測試方法（新增 82+ 個）
+- ✅ **測試類型**: 涵蓋單元、整合、異常、分支覆蓋、黑箱、系統測試
 - ✅ **測試穩定性**: 所有測試通過 (0 失敗, 0 錯誤)
+- ✅ **黑箱測試**: 新增 42+ 個黑箱測試方法
+- ✅ **系統測試**: 新增 40+ 個系統測試方法
 
 ---
 
 ## 📝 建議
 
 1. **持續維護**: 新增功能時同步新增對應測試
-2. **整合測試擴展**: 可考慮新增更多端到端整合測試
-3. **效能測試**: 可考慮新增效能測試（如壓力測試）
-4. **回歸測試**: 確保所有測試在 CI/CD 中自動執行
+2. **整合測試擴展**: ✅ 已完成 - 新增伺服器層整合測試
+3. **黑箱測試擴展**: ✅ 已完成 - 新增 API 和遊戲流程黑箱測試
+4. **系統測試擴展**: ✅ 已完成 - 新增多客戶端系統測試
+5. **效能測試**: 可考慮新增效能測試（如壓力測試）- 低優先級
+6. **回歸測試**: 確保所有測試在 CI/CD 中自動執行
 
----
+## 🎉 最新更新（2026-01-04）
 
-*最後更新: 2025-12-30*
+### 新增測試文件（5 個）
+
+1. **WebSocketAPIBlackBoxTest.java** - 30+ 測試方法
+   - 測試所有 WebSocket Command 的輸入輸出
+   - 測試錯誤處理和邊界條件
+
+2. **GameFlowBlackBoxTest.java** - 12+ 測試方法
+   - 從玩家視角測試完整遊戲流程
+   - 測試動作優先級和錯誤處理
+
+3. **WebSocketServerIntegrationTest.java** - 15+ 測試方法
+   - 測試 WebSocket 伺服器與遊戲會話整合
+   - 測試多客戶端連接和斷線處理
+
+4. **ClientServerIntegrationTest.java** - 15+ 測試方法
+   - 測試客戶端與伺服器完整訊息流
+   - 測試多客戶端互動和錯誤處理
+
+5. **MultiClientSystemTest.java** - 10+ 測試方法
+   - 測試併發連接和狀態同步
+   - 測試系統在壓力下的穩定性
 
