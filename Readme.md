@@ -11,7 +11,7 @@
 - ✅ **Bug 修復紀錄**：10 個 Bug & Fix 案例，涵蓋 Critical、Major、Logic 等各類問題
 
 ### 技術棧
-- **後端**：Java 17, Maven, WebSocket (Java-WebSocket)
+- **後端**：Java 21, Maven, WebSocket (Java-WebSocket)
 - **前端**：HTML5, JavaScript, CSS3
 - **測試**：JUnit 5, Mockito, Jacoco
 - **通訊**：WebSocket (JSON 封包)

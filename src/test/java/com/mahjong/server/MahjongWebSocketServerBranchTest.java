@@ -1,21 +1,25 @@
 package com.mahjong.server;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mahjong.model.Command;
-import com.mahjong.model.Packet;
-import org.java_websocket.WebSocket;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-
 import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.java_websocket.WebSocket;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
+import org.mockito.Mock;
+import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import org.mockito.MockitoAnnotations;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mahjong.model.Command;
+import com.mahjong.model.Packet;
 
 /**
  * MahjongWebSocketServer 分支覆蓋率測試
@@ -173,30 +177,49 @@ class MahjongWebSocketServerBranchTest {
 
     /**
      * 測試 startGame() 的異常處理分支
+     * 通過讓 WebSocket.send() 拋出異常來觸發 startGame() 的 catch 塊
      */
     @Test
     void testStartGame_ExceptionHandling() throws Exception {
-        // 設置會導致異常的條件（例如：waitingQueue 為空）
-        // 但實際上 startGame 是私有方法，我們通過登入 4 個玩家來觸發
+        // 設置所有 WebSocket 的 send 方法都會拋出異常
+        doThrow(new RuntimeException("Broadcast failed")).when(mockWebSocket1).send(anyString());
+        doThrow(new RuntimeException("Broadcast failed")).when(mockWebSocket2).send(anyString());
+        doThrow(new RuntimeException("Broadcast failed")).when(mockWebSocket3).send(anyString());
+        doThrow(new RuntimeException("Broadcast failed")).when(mockWebSocket4).send(anyString());
         
-        // 正常情況下應該不會拋出異常
-        setupGameWithFourPlayers();
+        // 嘗試登入 4 個玩家（會觸發 startGame）
+        // 即使 broadcast 失敗，startGame 的異常處理應該能捕獲
+        String[] nicknames = {"Player1", "Player2", "Player3", "Player4"};
+        WebSocket[] sockets = {mockWebSocket1, mockWebSocket2, mockWebSocket3, mockWebSocket4};
         
-        // 驗證遊戲已開始
-        for (WebSocket socket : new WebSocket[]{mockWebSocket1, mockWebSocket2, mockWebSocket3, mockWebSocket4}) {
-            verify(socket, atLeastOnce()).send(anyString());
+        for (int i = 0; i < 4; i++) {
+            final int index = i;
+            Map<String, Object> data = new HashMap<>();
+            data.put("nickname", nicknames[index]);
+            Packet loginPacket = new Packet(Command.LOGIN, data);
+            String json = new ObjectMapper().writeValueAsString(loginPacket);
+            final String jsonFinal = json;
+            
+            // 應該捕獲異常而不崩潰
+            assertDoesNotThrow(() -> {
+                server.onMessage(sockets[index], jsonFinal);
+            });
         }
     }
 
     /**
      * 測試 broadcast() 的異常處理分支
+     * 通過讓所有 WebSocket 的 send 方法拋出異常來觸發 broadcast() 的 catch 塊
      */
     @Test
     void testBroadcast_ExceptionHandling() throws Exception {
-        // 設置 send 會拋出異常
+        // 設置所有 WebSocket 的 send 方法都會拋出異常
         doThrow(new RuntimeException("Broadcast failed")).when(mockWebSocket1).send(anyString());
+        doThrow(new RuntimeException("Broadcast failed")).when(mockWebSocket2).send(anyString());
+        doThrow(new RuntimeException("Broadcast failed")).when(mockWebSocket3).send(anyString());
+        doThrow(new RuntimeException("Broadcast failed")).when(mockWebSocket4).send(anyString());
         
-        // 先登入
+        // 先登入一個玩家（會觸發 broadcastMessage，進而觸發 broadcast）
         Map<String, Object> data = new HashMap<>();
         data.put("nickname", "Player1");
         Packet loginPacket = new Packet(Command.LOGIN, data);
